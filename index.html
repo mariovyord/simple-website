@@ -125,6 +125,21 @@
           rgba(0, 0, 0, 0.05) 24px
         );
       }
+
+      .party-instructions {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        cursor: default;
+        user-select: none;
+      }
     </style>
   </head>
   <body>
@@ -153,10 +168,28 @@
         <a href="https://github.com/mariovyord"> github.com/mariovyord </a>
       </p>
     </div>
-
+    <div class="party-instructions">Press the space bar for a party!</div>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script>
       // Make elements draggable
       const stickyNotes = document.querySelectorAll(".sticky-note");
+
+      // Add space key confetti
+      document.addEventListener("keydown", function (event) {
+        if (event.code === "Space") {
+          event.preventDefault();
+          fireConfetti();
+        }
+      });
+
+      function fireConfetti() {
+        confetti({
+          particleCount: 250,
+          spread: 300,
+          origin: { y: 0.6 },
+          colors: ["#fff9b1", "#ffdfba", "#dbffd6"],
+        });
+      }
 
       stickyNotes.forEach((note) => {
         makeDraggable(note);
