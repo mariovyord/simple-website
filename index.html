@@ -176,10 +176,12 @@
           document.addEventListener("mousemove", elementDrag);
 
           // Bring the clicked note to the front
-          stickyNotes.forEach((note) => {
-            note.style.zIndex = "1";
-          });
-          element.style.zIndex = "10";
+          const highestZIndex = Math.max(
+            ...Array.from(stickyNotes).map(
+              (note) => parseInt(window.getComputedStyle(note).zIndex) || 0
+            )
+          );
+          element.style.zIndex = highestZIndex + 1;
         }
 
         function elementDrag(e) {
