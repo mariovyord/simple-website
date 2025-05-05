@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Draggable Sticky Notes</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        background-color: #f0f0f0;
+        background-image: linear-gradient(
+            45deg,
+            #e7e7e7 25%,
+            transparent 25%,
+            transparent 75%,
+            #e7e7e7 75%,
+            #e7e7e7
+          ),
+          linear-gradient(
+            45deg,
+            #e7e7e7 25%,
+            transparent 25%,
+            transparent 75%,
+            #e7e7e7 75%,
+            #e7e7e7
+          );
+        background-size: 60px 60px;
+        background-position: 0 0, 30px 30px;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        overflow: hidden;
+      }
+
+      .sticky-note {
+        position: absolute;
+        width: 336px; /* Increased by 20% from 280px */
+        min-height: 240px; /* Increased by 20% from 200px */
+        padding: 36px 30px 30px; /* Increased by 20% from 30px 25px 25px */
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
+        cursor: move;
+        border-radius: 1px;
+        user-select: none;
+        overflow: hidden;
+        font-size: 1.32em; /* Increased by 20% from 1.1em */
+        line-height: 1.5;
+        color: rgba(0, 0, 0, 0.75);
+        background-size: 100% 24px; /* Adjusted for the new size */
+        font-family: "Marker Felt", "Comic Sans MS", cursive;
+        transition: box-shadow 0.3s ease;
+      }
+
+      .sticky-note::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 24px; /* Increased by 20% from 20px */
+        background-color: rgba(0, 0, 0, 0.05);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+      }
+
+      .sticky-note::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 36px; /* Increased by 20% from 30px */
+        height: 36px; /* Increased by 20% from 30px */
+        background: linear-gradient(
+          135deg,
+          transparent 50%,
+          rgba(0, 0, 0, 0.05) 50%
+        );
+        border-radius: 0 0 3px 0;
+      }
+
+      .sticky-note:hover {
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.15),
+          0 10px 10px rgba(0, 0, 0, 0.12);
+      }
+
+      #note1 {
+        background-color: #fff9b1; /* soft yellow */
+        top: calc(50vh - 180px); /* Adjusted for the new size */
+        left: calc(
+          50vw - 294px
+        ); /* Moved left by shifting 20% more to the left */
+        z-index: 3;
+        transform: rotate(-3deg);
+        background-image: repeating-linear-gradient(
+          transparent,
+          transparent 23px,
+          rgba(0, 0, 0, 0.05) 23px,
+          rgba(0, 0, 0, 0.05) 24px
+        );
+      }
+
+      #note2 {
+        background-color: #ffdfba; /* soft orange */
+        top: calc(50vh - 120px); /* Adjusted for the new size */
+        left: calc(
+          50vw - 214px
+        ); /* Moved left by shifting 20% more to the left */
+        z-index: 2;
+        transform: rotate(2deg);
+        background-image: repeating-linear-gradient(
+          transparent,
+          transparent 23px,
+          rgba(0, 0, 0, 0.05) 23px,
+          rgba(0, 0, 0, 0.05) 24px
+        );
+      }
+
+      #note3 {
+        background-color: #dbffd6; /* soft green */
+        top: calc(50vh - 60px); /* Adjusted for the new size */
+        left: calc(
+          50vw - 134px
+        ); /* Moved left by shifting 20% more to the left */
+        z-index: 1;
+        transform: rotate(-1deg);
+        background-image: repeating-linear-gradient(
+          transparent,
+          transparent 23px,
+          rgba(0, 0, 0, 0.05) 23px,
+          rgba(0, 0, 0, 0.05) 24px
+        );
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sticky-note" id="note1">
+      <p><b>Hi, I'm Mario - a Front-End Engineer based in Bulgaria. </b></p>
+    </div>
+
+    <div class="sticky-note" id="note2">
+      I specialize in Angular and TypeScript, with some experience in React. My
+      toolkit includes Jest and Playwright for comprehensive testing. I'm also
+      comfortable exploring backend technologies like Express.js, Java, and
+      Spring Boot, though my experience there is still growing.
+    </div>
+
+    <div class="sticky-note" id="note3">
+      Let's connect! Reach out to me at mariovyordanov@gmail.com or find me on
+      LinkedIn at
+      <a href="https://www.linkedin.com/in/mariovyordanov/">
+        linkedin.com/in/mariovyordanov/
+      </a>
+      <br /><br />
+      Check out my code on GitHub:
+      <a href="https://github.com/mariovyord"> github.com/mariovyord </a>
+    </div>
+
+    <script>
+      // Make elements draggable
+      const stickyNotes = document.querySelectorAll(".sticky-note");
+
+      stickyNotes.forEach((note) => {
+        makeDraggable(note);
+      });
+
+      function makeDraggable(element) {
+        let pos1 = 0,
+          pos2 = 0,
+          pos3 = 0,
+          pos4 = 0;
+
+        element.addEventListener("mousedown", dragMouseDown);
+
+        function dragMouseDown(e) {
+          e.preventDefault();
+          // Get the mouse cursor position at startup
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          document.addEventListener("mouseup", closeDragElement);
+          document.addEventListener("mousemove", elementDrag);
+
+          // Bring the clicked note to the front
+          stickyNotes.forEach((note) => {
+            note.style.zIndex = "1";
+          });
+          element.style.zIndex = "10";
+        }
+
+        function elementDrag(e) {
+          e.preventDefault();
+          // Calculate the new cursor position
+          pos1 = pos3 - e.clientX;
+          pos2 = pos4 - e.clientY;
+          pos3 = e.clientX;
+          pos4 = e.clientY;
+          // Set the element's new position
+          element.style.top = element.offsetTop - pos2 + "px";
+          element.style.left = element.offsetLeft - pos1 + "px";
+        }
+
+        function closeDragElement() {
+          // Stop moving when mouse button is released
+          document.removeEventListener("mouseup", closeDragElement);
+          document.removeEventListener("mousemove", elementDrag);
+        }
+      }
+    </script>
+  </body>
+</html>
