@@ -74,6 +74,7 @@
       .terminal-header {
         position: relative;
         padding-bottom: 25px;
+        padding-top: 25px;
         margin-bottom: 15px;
         border-bottom: 1px solid var(--terminal-green-dim);
       }
@@ -206,27 +207,30 @@
       /* Mobile responsiveness */
       @media (max-width: 768px) {
         .info-panel {
-          transform: translateX(100%);
+          transform: none;
           right: 0;
           top: 0;
-          width: 80%;
-          height: 100%;
-          max-height: 100%;
+          width: 100vw;
+          height: 100vh;
+          max-height: 100vh;
           border-radius: 0;
+          z-index: 100;
+          padding-top: 40px;
         }
-
-        .info-panel.active {
-          transform: translateX(0);
+        /* Show all sections in info-panel on mobile */
+        .info-panel .section {
+          display: block;
         }
-
-        .menu-toggle {
-          display: flex;
+        .terminal-header {
+          margin-bottom: 0;
+          border-bottom: none;
+          padding-bottom: 0;
         }
-
-        .game-controls {
-          bottom: 10px;
-          left: 10px;
-          padding: 10px;
+        .hide-on-mobile {
+          display: none !important;
+        }
+        body {
+          overflow: auto;
         }
       }
 
@@ -269,32 +273,16 @@
     </style>
   </head>
   <body>
-    <div id="canvas-container">
+    <div id="canvas-container" class="hide-on-mobile">
       <canvas id="canvas" class="game"></canvas>
     </div>
 
-    <button class="menu-toggle">☰</button>
+    <button class="menu-toggle hide-on-mobile">☰</button>
 
     <div class="info-panel">
       <div class="terminal-header">
         <h1 class="blinking-cursor">Hi, I'm Mario Yordanov</h1>
         <p>Front-End Engineer based in Bulgaria</p>
-      </div>
-
-      <div class="section">
-        <p>
-          I specialize in <strong>Angular</strong> and
-          <strong>TypeScript</strong>, with some experience in React. My toolkit
-          includes Jest, Testing Library and Playwright for comprehensive
-          testing.
-        </p>
-      </div>
-
-      <div class="section">
-        <p>
-          I'm also comfortable exploring backend technologies like Express.js,
-          Java, and Spring Boot, though my experience there is still growing.
-        </p>
       </div>
 
       <div class="section">
@@ -319,13 +307,13 @@
     </div>
 
     <!-- Score Panel -->
-    <div class="score-panel" id="scorePanel">
+    <div class="score-panel hide-on-mobile" id="scorePanel">
       <span class="label">Score:</span>
       <span class="score-value" id="scoreValue">0</span>
       <span class="high-score" id="highScoreValue">High Score: 0</span>
     </div>
 
-    <div class="game-controls">
+    <div class="game-controls hide-on-mobile">
       <h2>Game Controls</h2>
       <ul>
         <li><span class="key">↑</span> Jump</li>
@@ -523,40 +511,46 @@
         spawnRandomGoomba() {
           // Randomly choose a platform or floor to spawn on
           const spawnOptions = [
-            { // Floor right
+            {
+              // Floor right
               x: this.canvas.width - 100,
               y: this.floorY - 30,
-              vx: -1.5
+              vx: -1.5,
             },
-            { // Floor left
+            {
+              // Floor left
               x: 50,
               y: this.floorY - 30,
-              vx: 1.5
+              vx: 1.5,
             },
-            { // Middle platform
+            {
+              // Middle platform
               x: 450,
               y: this.canvas.height - 230,
-              vx: -1
+              vx: -1,
             },
-            { // High platform
+            {
+              // High platform
               x: 700,
               y: this.canvas.height - 300,
-              vx: -1.2
+              vx: -1.2,
             },
-            { // Right low platform
+            {
+              // Right low platform
               x: 800,
               y: this.canvas.height - 120,
-              vx: -1.2
-            }
+              vx: -1.2,
+            },
           ];
-          const opt = spawnOptions[Math.floor(Math.random() * spawnOptions.length)];
+          const opt =
+            spawnOptions[Math.floor(Math.random() * spawnOptions.length)];
           this.enemies.push({
             position: { x: opt.x, y: opt.y },
             velocity: { x: opt.vx, y: 0 },
             width: 30,
             height: 30,
             isDead: false,
-            deathTimer: 0
+            deathTimer: 0,
           });
         }
 
