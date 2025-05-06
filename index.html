@@ -3,241 +3,797 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Draggable Sticky Notes</title>
+    <title>Mario Yordanov | Front-End Engineer</title>
     <style>
-      body {
-        font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: #f0f0f0;
-        background-image: linear-gradient(
-            45deg,
-            #e7e7e7 25%,
-            transparent 25%,
-            transparent 75%,
-            #e7e7e7 75%,
-            #e7e7e7
-          ),
-          linear-gradient(
-            45deg,
-            #e7e7e7 25%,
-            transparent 25%,
-            transparent 75%,
-            #e7e7e7 75%,
-            #e7e7e7
-          );
-        background-size: 60px 60px;
-        background-position: 0 0, 30px 30px;
+      :root {
+        --terminal-green: #0f0;
+        --terminal-green-dim: rgba(0, 255, 0, 0.2);
+        --terminal-yellow: #ff0;
+        --bg-dark: #000;
+        --bg-panel: rgba(0, 20, 0, 0.85);
+        --border-glow: 0 0 10px rgba(0, 255, 0, 0.5);
+      }
+
+      * {
         margin: 0;
-        padding: 20px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Courier New", monospace;
+        background-color: var(--bg-dark);
+        background-image: linear-gradient(
+            rgba(0, 20, 0, 0.8) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(0, 20, 0, 0.8) 1px, transparent 1px);
+        background-size: 20px 20px;
+        margin: 0;
+        padding: 0;
         min-height: 100vh;
         overflow: hidden;
+        color: var(--terminal-green);
+        position: relative;
       }
 
-      .sticky-note {
-        position: absolute;
-        width: 336px;
-        min-height: 240px;
-        padding: 36px 30px 30px;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 6px 6px rgba(0, 0, 0, 0.1);
-        cursor: move;
-        border-radius: 1px;
-        user-select: none;
-        overflow: hidden;
-        font-size: 1.32em;
-        line-height: 1.5;
-        color: rgba(0, 0, 0, 0.75);
-        background-size: 100% 24px;
-        font-family: "Marker Felt", "Comic Sans MS", cursive;
-        transition: box-shadow 0.3s ease;
-      }
-
-      .sticky-note::before {
-        content: "";
-        position: absolute;
+      /* Game canvas as background */
+      #canvas-container {
+        position: fixed;
         top: 0;
         left: 0;
-        right: 0;
-        height: 24px;
-        background-color: rgba(0, 0, 0, 0.05);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-      }
-
-      .sticky-note::after {
-        content: "";
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        width: 36px;
-        height: 36px;
-        background: linear-gradient(
-          135deg,
-          transparent 50%,
-          rgba(0, 0, 0, 0.05) 50%
-        );
-        border-radius: 0 0 3px 0;
-      }
-
-      .sticky-note:hover {
-        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.15),
-          0 10px 10px rgba(0, 0, 0, 0.12);
-      }
-
-      #note1 {
-        background-color: #fff9b1;
-        top: calc(50vh - 180px);
-        left: calc(50vw - 294px);
-        z-index: 3;
-        transform: rotate(-3deg);
-        background-image: repeating-linear-gradient(
-          transparent,
-          transparent 23px,
-          rgba(0, 0, 0, 0.05) 23px,
-          rgba(0, 0, 0, 0.05) 24px
-        );
-      }
-
-      #note2 {
-        background-color: #ffdfba;
-        top: calc(50vh - 120px);
-        left: calc(50vw - 214px);
-        z-index: 2;
-        transform: rotate(2deg);
-        background-image: repeating-linear-gradient(
-          transparent,
-          transparent 23px,
-          rgba(0, 0, 0, 0.05) 23px,
-          rgba(0, 0, 0, 0.05) 24px
-        );
-      }
-
-      #note3 {
-        background-color: #dbffd6;
-        top: calc(50vh - 60px);
-        left: calc(50vw - 134px);
+        width: 100%;
+        height: 100%;
         z-index: 1;
-        transform: rotate(-1deg);
-        background-image: repeating-linear-gradient(
-          transparent,
-          transparent 23px,
-          rgba(0, 0, 0, 0.05) 23px,
-          rgba(0, 0, 0, 0.05) 24px
-        );
       }
 
-      .party-instructions {
+      .game {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background-color: black;
+      }
+
+      /* Info panel layout */
+      .info-panel {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 380px;
+        background: var(--bg-panel);
+        border: 1px solid var(--terminal-green);
+        border-radius: 5px;
+        padding: 20px;
+        z-index: 10;
+        box-shadow: var(--border-glow);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        transition: all 0.3s ease;
+      }
+
+      .terminal-header {
+        position: relative;
+        padding-bottom: 25px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid var(--terminal-green-dim);
+      }
+
+      .terminal-header::before {
+        content: "$ terminal_bio ~";
+        position: absolute;
+        top: -20px;
+        left: -20px;
+        right: -20px;
+        height: 24px;
+        background-color: rgba(0, 40, 0, 0.9);
+        border-bottom: 1px solid var(--terminal-green);
+        color: var(--terminal-green);
+        font-size: 0.8em;
+        padding: 2px 10px;
+        display: flex;
+        align-items: center;
+        border-radius: 5px 5px 0 0;
+      }
+
+      .info-panel h1 {
+        font-size: 1.3em;
+        margin-bottom: 10px;
+        color: var(--terminal-green);
+        font-weight: bold;
+      }
+
+      .info-panel p,
+      .info-panel div {
+        margin-bottom: 15px;
+        line-height: 1.6;
+      }
+
+      .section {
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      .section::before {
+        content: ">";
+        position: absolute;
+        left: -15px;
+        color: var(--terminal-green);
+      }
+
+      .info-panel a {
+        color: var(--terminal-yellow);
+        text-decoration: none;
+        border-bottom: 1px dashed var(--terminal-yellow);
+        transition: all 0.2s ease;
+      }
+
+      .info-panel a:hover {
+        color: #fff;
+        border-bottom: 1px solid #fff;
+      }
+
+      /* Game controls panel */
+      .game-controls {
         position: fixed;
         bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: rgba(255, 255, 255, 0.8);
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        z-index: 100;
-        cursor: default;
-        user-select: none;
+        left: 20px;
+        background: var(--bg-panel);
+        border: 1px solid var(--terminal-green);
+        border-radius: 5px;
+        padding: 15px 20px;
+        z-index: 10;
+        box-shadow: var(--border-glow);
+        transition: all 0.3s ease;
+      }
+
+      .game-controls h2 {
+        font-size: 1em;
+        margin-bottom: 10px;
+        color: var(--terminal-green);
+        text-transform: uppercase;
+      }
+
+      .game-controls ul {
+        list-style-type: none;
+      }
+
+      .game-controls li {
+        margin-bottom: 5px;
+      }
+
+      .key {
+        display: inline-block;
+        background: rgba(0, 40, 0, 0.9);
+        padding: 2px 8px;
+        border: 1px solid var(--terminal-green);
+        border-radius: 3px;
+        margin-right: 5px;
+      }
+
+      /* Toggle button for mobile */
+      .menu-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: var(--bg-panel);
+        border: 1px solid var(--terminal-green);
+        color: var(--terminal-green);
+        width: 40px;
+        height: 40px;
+        border-radius: 5px;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 20;
+        cursor: pointer;
+      }
+
+      .blinking-cursor::after {
+        content: "|";
+        animation: blink 1s step-end infinite;
+      }
+
+      @keyframes blink {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0;
+        }
+      }
+
+      /* Mobile responsiveness */
+      @media (max-width: 768px) {
+        .info-panel {
+          transform: translateX(100%);
+          right: 0;
+          top: 0;
+          width: 80%;
+          height: 100%;
+          max-height: 100%;
+          border-radius: 0;
+        }
+
+        .info-panel.active {
+          transform: translateX(0);
+        }
+
+        .menu-toggle {
+          display: flex;
+        }
+
+        .game-controls {
+          bottom: 10px;
+          left: 10px;
+          padding: 10px;
+        }
       }
     </style>
   </head>
   <body>
-    <div class="sticky-note" id="note1">
-      <p><b>Hi, I'm Mario - a Front-End Engineer based in Bulgaria. </b></p>
+    <div id="canvas-container">
+      <canvas id="canvas" class="game"></canvas>
     </div>
 
-    <div class="sticky-note" id="note2">
-      I specialize in Angular and TypeScript, with some experience in React. My
-      toolkit includes Jest, Testing Library and Playwright for comprehensive
-      testing. I'm also comfortable exploring backend technologies like
-      Express.js, Java, and Spring Boot, though my experience there is still
-      growing.
+    <button class="menu-toggle">☰</button>
+
+    <div class="info-panel">
+      <div class="terminal-header">
+        <h1 class="blinking-cursor">Hi, I'm Mario Yordanov</h1>
+        <p>Front-End Engineer based in Bulgaria</p>
+      </div>
+
+      <div class="section">
+        <p>
+          I specialize in <strong>Angular</strong> and
+          <strong>TypeScript</strong>, with some experience in React. My toolkit
+          includes Jest, Testing Library and Playwright for comprehensive
+          testing.
+        </p>
+      </div>
+
+      <div class="section">
+        <p>
+          I'm also comfortable exploring backend technologies like Express.js,
+          Java, and Spring Boot, though my experience there is still growing.
+        </p>
+      </div>
+
+      <div class="section">
+        <p>Let's connect! Reach out to me at:</p>
+        <p>
+          📧
+          <a href="mailto:mariovyordanov@gmail.com">mariovyordanov@gmail.com</a>
+        </p>
+        <p>
+          💼
+          <a href="https://www.linkedin.com/in/mariovyordanov/" target="_blank"
+            >linkedin.com/in/mariovyordanov</a
+          >
+        </p>
+        <p>
+          💻
+          <a href="https://github.com/mariovyord" target="_blank"
+            >github.com/mariovyord</a
+          >
+        </p>
+      </div>
     </div>
 
-    <div class="sticky-note" id="note3">
-      <p>Let's connect! Reach out to me at mariovyordanov@gmail.com</p>
-      <p>
-        ...or find me on LinkedIn at
-        <a href="https://www.linkedin.com/in/mariovyordanov/">
-          linkedin.com/in/mariovyordanov/
-        </a>
-      </p>
-      <p>
-        Check out my code on GitHub:
-        <a href="https://github.com/mariovyord"> github.com/mariovyord </a>
-      </p>
+    <div class="game-controls">
+      <h2>Game Controls</h2>
+      <ul>
+        <li><span class="key">←</span><span class="key">→</span> Move</li>
+        <li><span class="key">Space</span> Jump</li>
+        <li><span class="key">R</span> Restart (after game over)</li>
+      </ul>
     </div>
-    <div class="party-instructions">Press the space bar for a party!</div>
+
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script>
-      // Make elements draggable
-      const stickyNotes = document.querySelectorAll(".sticky-note");
+      // Mobile toggle menu
+      const menuToggle = document.querySelector(".menu-toggle");
+      const infoPanel = document.querySelector(".info-panel");
 
-      // Add space key confetti
-      document.addEventListener("keydown", function (event) {
-        if (event.code === "Space") {
-          event.preventDefault();
-          fireConfetti();
-        }
-      });
-
-      function fireConfetti() {
-        confetti({
-          particleCount: 250,
-          spread: 300,
-          origin: { y: 0.6 },
-          colors: ["#fff9b1", "#ffdfba", "#dbffd6"],
+      if (menuToggle && infoPanel) {
+        menuToggle.addEventListener("click", () => {
+          infoPanel.classList.toggle("active");
         });
       }
 
-      stickyNotes.forEach((note) => {
-        makeDraggable(note);
-      });
+      // Game code
+      /** @type {HTMLCanvasElement} */
+      const canvas = document.getElementById("canvas");
+      /** @type {CanvasRenderingContext2D} */
+      const ctx = canvas.getContext("2d");
 
-      function makeDraggable(element) {
-        let pos1 = 0,
-          pos2 = 0,
-          pos3 = 0,
-          pos4 = 0;
+      // Make canvas fill the container
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        ctx.imageSmoothingEnabled = false;
+      }
 
-        element.addEventListener("mousedown", dragMouseDown);
+      // Resize on load and when window size changes
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
 
-        function dragMouseDown(e) {
-          e.preventDefault();
-          // Get the mouse cursor position at startup
-          pos3 = e.clientX;
-          pos4 = e.clientY;
-          document.addEventListener("mouseup", closeDragElement);
-          document.addEventListener("mousemove", elementDrag);
+      class Player {
+        /**
+         * @param {HTMLCanvasElement} canvas -
+         * @param {CanvasRenderingContext2D} ctx
+         */
+        constructor(canvas, ctx) {
+          this.canvas = canvas;
+          this.ctx = ctx;
+          this.width = 32;
+          this.height = 32;
+          // Position the player on the left platform
+          this.position = {
+            x: 80,
+            y: this.canvas.height - 282, // Positioned just above the left platform
+          };
+          this.velocity = {
+            x: 0,
+            y: 0,
+          };
+          this.speed = 5;
+          this.jumpForce = -12;
+          this.isJumping = false;
+          this.facingRight = true;
+          this.wasJumping = false; // Track previous jump state
+        }
 
-          // Bring the clicked note to the front
-          const highestZIndex = Math.max(
-            ...Array.from(stickyNotes).map(
-              (note) => parseInt(window.getComputedStyle(note).zIndex) || 0
-            )
+        update(keys) {
+          // Horizontal movement
+          if (keys.right) {
+            this.velocity.x = this.speed;
+            this.facingRight = true;
+          } else if (keys.left) {
+            this.velocity.x = -this.speed;
+            this.facingRight = false;
+          } else {
+            this.velocity.x = 0;
+          }
+
+          // Jumping - with confetti effect
+          if (keys.jump && !this.isJumping) {
+            this.velocity.y = this.jumpForce;
+            this.isJumping = true;
+
+            // Fire confetti from player position
+            this.fireJumpConfetti();
+          }
+
+          // Update position
+          this.position.x += this.velocity.x;
+          this.position.y += this.velocity.y;
+
+          // Ensure player stays within canvas bounds
+          if (this.position.x < 0) this.position.x = 0;
+          if (this.position.x + this.width > this.canvas.width) {
+            this.position.x = this.canvas.width - this.width;
+          }
+        }
+
+        fireJumpConfetti() {
+          // Calculate normalized x and y position for confetti origin
+          const canvasRect = canvas.getBoundingClientRect();
+          const normalizedX = (this.position.x + this.width / 2) / canvas.width;
+          const normalizedY = this.position.y / canvas.height;
+
+          confetti({
+            particleCount: 50,
+            spread: 30,
+            origin: {
+              x: normalizedX,
+              y: normalizedY,
+            },
+            colors: ["white"],
+            gravity: 0.8,
+            scalar: 2,
+          });
+        }
+
+        draw() {
+          // Draw a simple square
+          this.ctx.fillStyle = "white";
+          this.ctx.fillRect(
+            this.position.x,
+            this.position.y,
+            this.width,
+            this.height
           );
-          element.style.zIndex = highestZIndex + 1;
         }
 
-        function elementDrag(e) {
-          e.preventDefault();
-          // Calculate the new cursor position
-          pos1 = pos3 - e.clientX;
-          pos2 = pos4 - e.clientY;
-          pos3 = e.clientX;
-          pos4 = e.clientY;
-          // Set the element's new position
-          element.style.top = element.offsetTop - pos2 + "px";
-          element.style.left = element.offsetLeft - pos1 + "px";
+        checkPlatformCollision(platform) {
+          // Check if the player is colliding with a platform from above
+          const isCollidingX =
+            this.position.x + this.width > platform.x &&
+            this.position.x < platform.x + platform.width;
+          const isCollidingY =
+            this.position.y + this.height >= platform.y &&
+            this.position.y + this.height <= platform.y + 10;
+          const isMovingDown = this.velocity.y > 0;
+
+          if (isCollidingX && isCollidingY && isMovingDown) {
+            this.position.y = platform.y - this.height;
+            this.velocity.y = 0;
+            this.isJumping = false;
+            return true;
+          }
+          return false;
         }
 
-        function closeDragElement() {
-          // Stop moving when mouse button is released
-          document.removeEventListener("mouseup", closeDragElement);
-          document.removeEventListener("mousemove", elementDrag);
+        checkEnemyCollision(enemy) {
+          // Check if jumping on enemy (hit from above)
+          const isCollidingX =
+            this.position.x + this.width > enemy.position.x &&
+            this.position.x < enemy.position.x + enemy.width;
+          const isJumpingOnEnemy =
+            this.position.y + this.height >= enemy.position.y &&
+            this.position.y + this.height <= enemy.position.y + 10 &&
+            this.velocity.y > 0;
+
+          // Check if hitting enemy from the side
+          const isHittingEnemy =
+            isCollidingX &&
+            this.position.y + this.height > enemy.position.y + 10 &&
+            this.position.y < enemy.position.y + enemy.height;
+
+          if (isCollidingX && isJumpingOnEnemy) {
+            // Bounce off enemy when jumping on it
+            this.velocity.y = this.jumpForce / 2;
+            return { hit: true, killed: true };
+          } else if (isHittingEnemy) {
+            return { hit: true, killed: false };
+          }
+
+          return { hit: false, killed: false };
         }
       }
+
+      class Game {
+        /**
+         * @param {HTMLCanvasElement} canvas -
+         * @param {CanvasRenderingContext2D} ctx
+         */
+        constructor(canvas, ctx) {
+          this.canvas = canvas;
+          this.ctx = ctx;
+        }
+
+        start() {
+          this.player = new Player(this.canvas, this.ctx);
+          this.enemies = [];
+          this.platforms = [];
+          this.keys = {
+            right: false,
+            left: false,
+            jump: false,
+          };
+          this.gravity = 0.5;
+          this.floorY = this.canvas.height - 50; // Position of the floor (50px from bottom)
+          this.gameOver = false;
+          this.score = 0;
+
+          // Create enemies
+          this.createGoomba();
+
+          // Create platforms
+          this.createPlatforms();
+
+          // Setup keyboard controls
+          this.setupControls();
+
+          // Start the game loop
+          this.loop();
+        }
+
+        createGoomba() {
+          // Add multiple goombas at different positions
+          this.enemies.push({
+            position: {
+              x: this.canvas.width - 100,
+              y: this.floorY - 30,
+            },
+            velocity: {
+              x: -1.5, // Moves left
+              y: 0,
+            },
+            width: 30,
+            height: 30,
+            isDead: false,
+            deathTimer: 0,
+          });
+
+          // Add a second goomba near the middle platform
+          this.enemies.push({
+            position: {
+              x: 450,
+              y: this.canvas.height - 230,
+            },
+            velocity: {
+              x: -1, // Slower movement
+              y: 0,
+            },
+            width: 30,
+            height: 30,
+            isDead: false,
+            deathTimer: 0,
+          });
+
+          // Add a third goomba on the right side
+          this.enemies.push({
+            position: {
+              x: this.canvas.width - 200,
+              y: this.floorY - 30,
+            },
+            velocity: {
+              x: -2, // Faster movement
+              y: 0,
+            },
+            width: 30,
+            height: 30,
+            isDead: false,
+            deathTimer: 0,
+          });
+        }
+
+        createPlatforms() {
+          // Small platform
+          this.platforms.push({
+            x: 200,
+            y: this.canvas.height - 150,
+            width: 100,
+            height: 20,
+          });
+
+          // Middle platform
+          this.platforms.push({
+            x: 400,
+            y: this.canvas.height - 200,
+            width: 200,
+            height: 20,
+          });
+
+          // High platform
+          this.platforms.push({
+            x: 700,
+            y: this.canvas.height - 300,
+            width: 150,
+            height: 20,
+          });
+
+          // Left platform
+          this.platforms.push({
+            x: 50,
+            y: this.canvas.height - 250,
+            width: 120,
+            height: 20,
+          });
+
+          // Right low platform
+          this.platforms.push({
+            x: 800,
+            y: this.canvas.height - 120,
+            width: 120,
+            height: 20,
+          });
+        }
+
+        setupControls() {
+          window.addEventListener("keydown", (e) => {
+            switch (e.key) {
+              case "ArrowRight":
+                this.keys.right = true;
+                break;
+              case "ArrowLeft":
+                this.keys.left = true;
+                break;
+              case "ArrowUp":
+              case " ": // Space bar
+                this.keys.jump = true;
+                break;
+              case "r": // Restart on 'r' key press
+                if (this.gameOver) this.start();
+                break;
+            }
+          });
+
+          window.addEventListener("keyup", (e) => {
+            switch (e.key) {
+              case "ArrowRight":
+                this.keys.right = false;
+                break;
+              case "ArrowLeft":
+                this.keys.left = false;
+                break;
+              case "ArrowUp":
+              case " ": // Space bar
+                this.keys.jump = false;
+                break;
+            }
+          });
+        }
+
+        /**
+         * The main game loop, which updates and draws the game state at every frame.
+         */
+        loop() {
+          if (!this.gameOver) {
+            this.update();
+            this.draw();
+            requestAnimationFrame(() => this.loop());
+          } else {
+            this.drawGameOver();
+          }
+        }
+
+        update() {
+          // Apply gravity and update player
+          this.applyGravity();
+          this.player.update(this.keys);
+
+          // Check collisions with floor
+          if (this.player.position.y + this.player.height > this.floorY) {
+            this.player.position.y = this.floorY - this.player.height;
+            this.player.velocity.y = 0;
+            this.player.isJumping = false;
+          }
+
+          // Check collisions with platforms
+          this.platforms.forEach((platform) =>
+            this.player.checkPlatformCollision(platform)
+          );
+
+          // Update enemies
+          this.updateEnemies();
+
+          // Check enemy collisions
+          this.checkEnemyCollisions();
+        }
+
+        updateEnemies() {
+          this.enemies.forEach((enemy) => {
+            if (!enemy.isDead) {
+              // Move enemy
+              enemy.position.x += enemy.velocity.x;
+
+              // Change direction when hitting walls
+              if (
+                enemy.position.x <= 0 ||
+                enemy.position.x + enemy.width >= this.canvas.width
+              ) {
+                enemy.velocity.x *= -1;
+              }
+            } else {
+              // If enemy is dead, count down death timer
+              enemy.deathTimer++;
+              if (enemy.deathTimer > 30) {
+                // Remove after 30 frames
+                this.enemies = this.enemies.filter((e) => e !== enemy);
+              }
+            }
+          });
+        }
+
+        checkEnemyCollisions() {
+          this.enemies.forEach((enemy) => {
+            if (!enemy.isDead) {
+              const collision = this.player.checkEnemyCollision(enemy);
+
+              if (collision.hit) {
+                if (collision.killed) {
+                  // Player jumped on enemy
+                  enemy.isDead = true;
+                  enemy.velocity.x = 0;
+                  enemy.height = 15; // Squish the enemy
+                  this.score += 100;
+                } else {
+                  // Player hit enemy from the side - game over
+                  this.gameOver = true;
+                }
+              }
+            }
+          });
+        }
+
+        /**
+         * Draws the game state, including players, enemies and game world.
+         */
+        draw() {
+          // Clear canvas
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+          // Draw background - blue sky
+          this.ctx.fillStyle = "black";
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+          // Draw floor
+          this.ctx.fillStyle = "black"; // Brown
+          this.ctx.fillRect(
+            0,
+            this.floorY,
+            this.canvas.width,
+            this.canvas.height - this.floorY
+          );
+
+          // Draw grass on top of the floor
+          this.ctx.fillStyle = "white"; // Forest green
+          this.ctx.fillRect(0, this.floorY, this.canvas.width, 10);
+
+          // Draw platforms
+          this.ctx.fillStyle = "white"; // Brick color
+          this.platforms.forEach((platform) => {
+            this.ctx.fillRect(
+              platform.x,
+              platform.y,
+              platform.width,
+              platform.height
+            );
+          });
+
+          // Draw player
+          this.player.draw();
+
+          // Draw enemies
+          this.enemies.forEach((enemy) => {
+            if (!enemy.isDead) {
+              this.ctx.fillStyle = "red";
+            } else {
+              this.ctx.fillStyle = "darkred";
+            }
+            this.ctx.fillRect(
+              enemy.position.x,
+              enemy.position.y,
+              enemy.width,
+              enemy.height
+            );
+          });
+
+          // Draw score
+          this.ctx.fillStyle = "white";
+          this.ctx.font = "20px Arial";
+          this.ctx.fillText(`Score: ${this.score}`, 20, 30);
+        }
+
+        drawGameOver() {
+          this.ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+          this.ctx.fillStyle = "white";
+          this.ctx.font = "bold 40px Arial";
+          this.ctx.textAlign = "center";
+          this.ctx.fillText(
+            "GAME OVER",
+            this.canvas.width / 2,
+            this.canvas.height / 2
+          );
+
+          this.ctx.font = "20px Arial";
+          this.ctx.fillText(
+            `Final Score: ${this.score}`,
+            this.canvas.width / 2,
+            this.canvas.height / 2 + 40
+          );
+          this.ctx.fillText(
+            "Press R to restart",
+            this.canvas.width / 2,
+            this.canvas.height / 2 + 80
+          );
+        }
+
+        applyGravity() {
+          // Apply gravity to player
+          this.player.velocity.y += this.gravity;
+        }
+      }
+
+      // Initialize the game
+      const game = new Game(canvas, ctx);
+      game.start();
     </script>
   </body>
 </html>
