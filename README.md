@@ -1,3 +1,3 @@
-# My Simple Website
+# My Website
 
-This is my website and it's simple. There are some branches that go crazy, but the main one... simple.
+Well, this is my website and it's quite simple.
