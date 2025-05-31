@@ -316,6 +316,12 @@
           constructor(canvas, ctx) {
             this.canvas = canvas;
             this.ctx = ctx;
+            this.lastTime = 0;
+            // Base speeds (pixels per second)
+            this.basePlayerSpeed = 300; // pixels per second
+            this.baseObstacleSpeed = 400; // pixels per second
+            this.spawnTimer = 0;
+            this.spawnInterval = 500; // spawn every 1 second
             this.reset();
 
             // Event listeners for keyboard
@@ -378,7 +384,6 @@
               y: this.canvas.height - 30,
               width: 30,
               height: 30,
-              speed: 5,
             };
             this.obstacles = [];
             this.score = 0;
@@ -387,6 +392,8 @@
               left: false,
               right: false,
             };
+            this.lastTime = 0;
+            this.spawnTimer = 0;
           }
 
           spawnObstacle() {
@@ -396,29 +403,39 @@
               y: 0,
               width: width,
               height: 20,
-              speed: 3,
             };
             this.obstacles.push(obstacle);
           }
 
-          updatePlayer() {
+          updatePlayer(deltaTime) {
+            const moveAmount = this.basePlayerSpeed * (deltaTime / 1000);
+
             // Move player based on input
             if (this.keys.left && this.player.x > 0) {
-              this.player.x -= this.player.speed;
+              this.player.x -= moveAmount;
             }
             if (
               this.keys.right &&
               this.player.x < this.canvas.width - this.player.width
             ) {
-              this.player.x += this.player.speed;
+              this.player.x += moveAmount;
             }
           }
 
-          updateObstacles() {
+          updateObstacles(deltaTime) {
+            const obstacleSpeed = this.baseObstacleSpeed * (deltaTime / 1000);
+
+            // Update spawn timer
+            this.spawnTimer += deltaTime;
+            if (this.spawnTimer >= this.spawnInterval) {
+              this.spawnObstacle();
+              this.spawnTimer = 0;
+            }
+
             // Move obstacles down
             for (let i = this.obstacles.length - 1; i >= 0; i--) {
               const obstacle = this.obstacles[i];
-              obstacle.y += obstacle.speed;
+              obstacle.y += obstacleSpeed;
 
               // Remove obstacles that are off screen
               if (obstacle.y > this.canvas.height) {
@@ -499,21 +516,23 @@
             }
           }
 
-          start() {
+          start(timestamp = 0) {
             if (this.gameOver) return;
 
-            // Spawn obstacles periodically
-            if (Math.random() < 0.02) {
-              // Adjust this value to change obstacle frequency
-              this.spawnObstacle();
+            // Calculate delta time
+            const deltaTime = timestamp - this.lastTime;
+            this.lastTime = timestamp;
+
+            // Skip first frame delta (it's too large)
+            if (deltaTime > 0) {
+              this.updatePlayer(deltaTime);
+              this.updateObstacles(deltaTime);
             }
 
-            this.updatePlayer();
-            this.updateObstacles();
             this.draw();
 
             // Continue the game loop
-            requestAnimationFrame(() => this.start());
+            requestAnimationFrame((timestamp) => this.start(timestamp));
           }
         }
 
