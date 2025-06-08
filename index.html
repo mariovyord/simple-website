@@ -154,6 +154,8 @@
         padding: 0;
         position: relative;
         transition: all 0.3s ease;
+        white-space: nowrap;
+        display: inline-block;
       }
       .switch-btn:hover {
         color: var(--terminal-yellow);
@@ -242,7 +244,10 @@
         .switch-btn {
           padding: 8px 16px;
           font-size: 0.9em;
-          bottom: 15px;
+        }
+        .exit-command {
+          top: -45px;
+          width: auto;
         }
         .game-container {
           height: 400px;
@@ -375,26 +380,14 @@
               if (e.key === "ArrowRight") this.keys.right = false;
             });
 
-            // Handle reset click
-            this.canvas.addEventListener("click", (e) => {
-              if (!this.gameOver) return;
-              
-              // Get click position relative to canvas
-              const rect = this.canvas.getBoundingClientRect();
-              const x = e.clientX - rect.left;
-              const y = e.clientY - rect.top;
-              
-              // Check if click is in the center area
-              const centerX = this.canvas.width / 2;
-              const centerY = this.canvas.height / 2;
-              
-              if (Math.abs(x - centerX) < 100 && Math.abs(y - centerY) < 50) {
-                this.reset();
-                this.start();
-              }
-            });
+            // Handle reset click and touch
+            this.canvas.addEventListener("click", (e) => this.handleReset(e));
+            this.canvas.addEventListener("touchend", (e) => {
+              e.preventDefault();
+              this.handleReset(e.changedTouches[0]);
+            }, { passive: false });
 
-            // Touch controls
+            // Touch controls for movement
             let touchStartX = null;
 
             this.canvas.addEventListener(
@@ -518,6 +511,24 @@
             );
           }
 
+          handleReset(e) {
+            if (!this.gameOver) return;
+
+            // Get event position relative to canvas
+            const rect = this.canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Check if interaction is in the center area
+            const centerX = this.canvas.width / 2;
+            const centerY = this.canvas.height / 2;
+
+            if (Math.abs(x - centerX) < 100 && Math.abs(y - centerY) < 50) {
+                this.reset();
+                this.start();
+            }
+          }
+
           draw() {
             // Clear canvas
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -563,7 +574,7 @@
                 this.canvas.width / 2,
                 this.canvas.height / 2 - 20
               );
-              
+
               // Draw reset text underneath
               this.ctx.font = "20px Courier New";
               this.ctx.fillText(
@@ -573,7 +584,8 @@
               );
 
               // Hide instructions but keep reset button hidden since we draw it on canvas
-              document.querySelector(".game-instructions").style.display = "none";
+              document.querySelector(".game-instructions").style.display =
+                "none";
               document.querySelector(".game-reset").style.display = "none";
             } else {
               // Show instructions and hide reset button
