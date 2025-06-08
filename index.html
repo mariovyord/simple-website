@@ -375,6 +375,25 @@
               if (e.key === "ArrowRight") this.keys.right = false;
             });
 
+            // Handle reset click
+            this.canvas.addEventListener("click", (e) => {
+              if (!this.gameOver) return;
+              
+              // Get click position relative to canvas
+              const rect = this.canvas.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              
+              // Check if click is in the center area
+              const centerX = this.canvas.width / 2;
+              const centerY = this.canvas.height / 2;
+              
+              if (Math.abs(x - centerX) < 100 && Math.abs(y - centerY) < 50) {
+                this.reset();
+                this.start();
+              }
+            });
+
             // Touch controls
             let touchStartX = null;
 
@@ -538,16 +557,24 @@
               this.ctx.fillStyle = "#0f0";
               this.ctx.font = "40px Courier New";
               this.ctx.textAlign = "center";
+              // Draw GAME OVER text
               this.ctx.fillText(
                 "GAME OVER",
                 this.canvas.width / 2,
-                this.canvas.height / 2
+                this.canvas.height / 2 - 20
+              );
+              
+              // Draw reset text underneath
+              this.ctx.font = "20px Courier New";
+              this.ctx.fillText(
+                "Click here to reset",
+                this.canvas.width / 2,
+                this.canvas.height / 2 + 20
               );
 
-              // Show reset button and hide instructions
-              document.querySelector(".game-instructions").style.display =
-                "none";
-              document.querySelector(".game-reset").style.display = "block";
+              // Hide instructions but keep reset button hidden since we draw it on canvas
+              document.querySelector(".game-instructions").style.display = "none";
+              document.querySelector(".game-reset").style.display = "none";
             } else {
               // Show instructions and hide reset button
               document.querySelector(".game-instructions").style.display =
