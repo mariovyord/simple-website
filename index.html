@@ -367,6 +367,11 @@
             this.baseObstacleSpeed = 400; // pixels per second
             this.spawnTimer = 0;
             this.spawnInterval = 500; // spawn every 1 second
+            // Load high score from localStorage with a unique key
+            this.highScore =
+              parseInt(
+                localStorage.getItem("marioYordanov_terminalGame_highScore")
+              ) || 0;
             this.reset();
 
             // Event listeners for keyboard
@@ -382,10 +387,14 @@
 
             // Handle reset click and touch
             this.canvas.addEventListener("click", (e) => this.handleReset(e));
-            this.canvas.addEventListener("touchend", (e) => {
-              e.preventDefault();
-              this.handleReset(e.changedTouches[0]);
-            }, { passive: false });
+            this.canvas.addEventListener(
+              "touchend",
+              (e) => {
+                e.preventDefault();
+                this.handleReset(e.changedTouches[0]);
+              },
+              { passive: false }
+            );
 
             // Touch controls for movement
             let touchStartX = null;
@@ -493,6 +502,15 @@
               if (obstacle.y > this.canvas.height) {
                 this.obstacles.splice(i, 1);
                 this.score += 10;
+
+                // Update high score if needed
+                if (this.score > this.highScore) {
+                  this.highScore = this.score;
+                  localStorage.setItem(
+                    "marioYordanov_terminalGame_highScore",
+                    this.highScore
+                  );
+                }
               }
 
               // Check for collision with player
@@ -524,8 +542,8 @@
             const centerY = this.canvas.height / 2;
 
             if (Math.abs(x - centerX) < 100 && Math.abs(y - centerY) < 50) {
-                this.reset();
-                this.start();
+              this.reset();
+              this.start();
             }
           }
 
@@ -562,6 +580,10 @@
             this.ctx.font = "20px Courier New";
             this.ctx.textAlign = "left";
             this.ctx.fillText(`Score: ${this.score}`, 10, 30);
+
+            // Draw high score
+            this.ctx.font = "14px Courier New";
+            this.ctx.fillText(`High Score: ${this.highScore}`, 10, 50);
 
             // Draw game over text and show reset button
             if (this.gameOver) {
