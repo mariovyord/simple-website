@@ -122,9 +122,27 @@
         padding-top: 15px;
         border-top: 1px solid var(--terminal-green-dim);
       }
-      .terminal-command::before {
+      .terminal-command::before,
+      .exit-command::before {
         content: "$ ";
         color: var(--terminal-green);
+      }
+      .exit-command {
+        position: absolute;
+        top: -40px;
+        left: 0;
+        background: var(--bg-panel);
+        padding: 8px 16px;
+        border: 1px solid var(--terminal-green);
+        border-radius: 5px;
+        box-shadow: var(--border-glow);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      .game-container.active .exit-command {
+        opacity: 1;
+        pointer-events: all;
       }
       .switch-btn {
         background: transparent;
@@ -261,11 +279,16 @@
         </p>
       </div>
       <div class="terminal-command">
-        <button class="switch-btn" onclick="toggleView()">execute game.sh</button>
+        <button class="switch-btn" onclick="toggleView()">
+          execute game.sh
+        </button>
       </div>
     </div>
 
     <div class="game-container">
+      <div class="exit-command">
+        <button class="switch-btn" onclick="toggleView()">exit</button>
+      </div>
       <canvas id="canvas"></canvas>
       <div class="game-instructions">
         <p>← → Move left and right</p>
@@ -307,7 +330,7 @@
             gameInstance.start();
           }
         } else {
-          btn.textContent = "Play Game";
+          btn.textContent = "execute game.sh";
           bio.classList.remove("hidden");
           game.classList.remove("active");
         }
