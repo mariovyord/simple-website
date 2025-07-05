@@ -11,12 +11,21 @@
     />
     <style>
       :root {
-        --terminal-green: #0f0;
-        --terminal-green-dim: rgba(0, 255, 0, 0.2);
-        --terminal-yellow: #ff0;
-        --bg-dark: #000;
-        --bg-panel: rgba(0, 20, 0, 0.85);
-        --border-glow: 0 0 10px rgba(0, 255, 0, 0.5);
+        --terminal-green: white;
+        --terminal-green-dim: white;
+        --terminal-yellow: white;
+        --bg-dark: black;
+        --bg-panel: black;
+      }
+
+      @media (prefers-color-scheme: light) {
+          :root {
+          --terminal-green: black;
+          --terminal-green-dim: black;
+          --terminal-yellow: black;
+          --bg-dark: white;
+          --bg-panel: white;
+        }
       }
       * {
         margin: 0;
@@ -41,9 +50,7 @@
       .info-panel {
         background: var(--bg-panel);
         border: 1px solid var(--terminal-green);
-        border-radius: 5px;
         padding: 28px 20px;
-        box-shadow: var(--border-glow);
         max-width: 95vw;
         width: 380px;
         z-index: 10;
@@ -55,22 +62,6 @@
         padding-bottom: 25px;
         margin-bottom: 15px;
         border-bottom: 1px solid var(--terminal-green-dim);
-      }
-      .terminal-header::before {
-        content: "$ bio ~";
-        position: absolute;
-        top: -28px;
-        left: -20px;
-        right: -20px;
-        height: 24px;
-        background-color: rgba(0, 40, 0, 0.9);
-        border-bottom: 1px solid var(--terminal-green);
-        color: var(--terminal-green);
-        font-size: 0.8em;
-        padding: 2px 10px;
-        display: flex;
-        align-items: center;
-        border-radius: 5px 5px 0 0;
       }
       .info-panel h1 {
         font-size: 1.3em;
@@ -134,8 +125,6 @@
         background: var(--bg-panel);
         padding: 8px 16px;
         border: 1px solid var(--terminal-green);
-        border-radius: 5px;
-        box-shadow: var(--border-glow);
         opacity: 0;
         pointer-events: none;
         transition: opacity 0.3s ease;
@@ -199,7 +188,6 @@
         border: 1px solid var(--terminal-green);
         color: var(--terminal-green);
         padding: 8px 16px;
-        border-radius: 5px;
         cursor: pointer;
         font-family: inherit;
         font-size: 1em;
@@ -219,8 +207,6 @@
       }
       #canvas {
         border: 1px solid var(--terminal-green);
-        border-radius: 5px;
-        box-shadow: var(--border-glow);
         background: var(--bg-panel);
         width: 100%;
         height: 100%;
@@ -256,6 +242,12 @@
           height: 100%;
         }
       }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      
     </style>
   </head>
   <body>
@@ -267,17 +259,14 @@
       <div class="section">
         <p>Let's connect! Reach out to me at:</p>
         <p>
-          📧
           <a href="mailto:mariovyordanov@gmail.com">mariovyordanov@gmail.com</a>
         </p>
         <p>
-          💼
           <a href="https://www.linkedin.com/in/mariovyordanov/" target="_blank"
             >linkedin.com/in/mariovyordanov</a
           >
         </p>
         <p>
-          💻
           <a href="https://github.com/mariovyord" target="_blank"
             >github.com/mariovyord</a
           >
@@ -297,7 +286,7 @@
       <canvas id="canvas"></canvas>
       <div class="game-instructions">
         <p>← → Move left and right</p>
-        <p>Avoid <span style="color: red">red</span> blocks</p>
+        <p>Avoid the falling blocks</p>
       </div>
       <div class="game-reset">
         <button onclick="resetGame()">Reset Game</button>
@@ -552,11 +541,11 @@
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
             // Draw background
-            this.ctx.fillStyle = "rgba(0, 20, 0, 0.85)";
+            this.ctx.fillStyle = "black";
             this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
             // Draw player
-            this.ctx.fillStyle = "#0f0";
+            this.ctx.fillStyle = "white";
             this.ctx.fillRect(
               this.player.x,
               this.player.y,
@@ -565,7 +554,7 @@
             );
 
             // Draw obstacles
-            this.ctx.fillStyle = "red";
+            this.ctx.fillStyle = "white";
             this.obstacles.forEach((obstacle) => {
               this.ctx.fillRect(
                 obstacle.x,
@@ -576,7 +565,7 @@
             });
 
             // Draw score
-            this.ctx.fillStyle = "#0f0";
+            this.ctx.fillStyle = "white";
             this.ctx.font = "20px Courier New";
             this.ctx.textAlign = "left";
             this.ctx.fillText(`Score: ${this.score}`, 10, 30);
@@ -587,7 +576,7 @@
 
             // Draw game over text and show reset button
             if (this.gameOver) {
-              this.ctx.fillStyle = "#0f0";
+              this.ctx.fillStyle = "white";
               this.ctx.font = "40px Courier New";
               this.ctx.textAlign = "center";
               // Draw GAME OVER text
