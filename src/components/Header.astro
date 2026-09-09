@@ -1,6 +1,7 @@
 ---
 import HeaderLink from "./HeaderLink.astro";
 import ThemeToggle from "./ThemeToggle.astro";
+import CommandPalette from "./CommandPalette.astro";
 ---
 
 <header>
@@ -9,10 +10,20 @@ import ThemeToggle from "./ThemeToggle.astro";
       <HeaderLink href="/">Home</HeaderLink>
       <HeaderLink href="/playground">Playground</HeaderLink>
       <HeaderLink href="/notes">Notes</HeaderLink>
+      <button
+        type="button"
+        class="cmdk-trigger"
+        data-cmdk-open
+        aria-label="Open command palette"
+        title="Search (⌘K)"
+      >
+        <span aria-hidden="true">⌘K</span>
+      </button>
       <ThemeToggle />
     </div>
   </nav>
 </header>
+<CommandPalette />
 <style>
   header {
     margin: 0;
@@ -36,5 +47,20 @@ import ThemeToggle from "./ThemeToggle.astro";
     padding: 1em 0.5em;
     color: var(--text-primary);
     text-decoration: none;
+  }
+  .cmdk-trigger {
+    font-family: "Roboto Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.75rem;
+    color: rgb(var(--gray));
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.35em 0.55em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .cmdk-trigger:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
 </style>

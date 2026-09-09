@@ -31,6 +31,12 @@ const { Content } = await post.render();
 const minutes = readingTime(post.body);
 ---
 
-<BlogPost {...post.data} readingTime={minutes} prev={prev} next={next}>
+<BlogPost
+  {...post.data}
+  readingTime={minutes}
+  prev={prev}
+  next={next}
+  rawMarkdown={post.body}
+>
   <Content />
 </BlogPost>

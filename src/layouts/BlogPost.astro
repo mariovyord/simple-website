@@ -11,6 +11,7 @@ type Props = CollectionEntry<"notes">["data"] & {
   readingTime?: number;
   prev?: { slug: string; title: string } | null;
   next?: { slug: string; title: string } | null;
+  rawMarkdown?: string;
 };
 
 const {
@@ -24,6 +25,7 @@ const {
   readingTime,
   prev,
   next,
+  rawMarkdown,
 } = Astro.props;
 ---
 
@@ -130,6 +132,15 @@ const {
     <Header />
     <main>
       <article>
+        {
+          rawMarkdown && (
+            <script
+              type="text/markdown"
+              id="note-markdown-source"
+              set:html={rawMarkdown}
+            />
+          )
+        }
         <div class="prose">
           <a href="/notes/" class="back-link">← Back to notes</a>
           <div class="title">
@@ -137,6 +148,13 @@ const {
               <FormattedDate date={pubDate} />
               {status && <NoteStatus status={status} />}
               {readingTime && <span class="reading-time">{readingTime} min read</span>}
+              {
+                rawMarkdown && (
+                  <button type="button" class="copy-md" data-copy-md>
+                    Copy as Markdown
+                  </button>
+                )
+              }
             </div>
             {
               updatedDate && (
@@ -250,17 +268,53 @@ const {
     }
   }
 
+  // Copy the raw markdown source of the note.
+  function initCopyMarkdown() {
+    const btn = document.querySelector<HTMLButtonElement>("[data-copy-md]");
+    const source = document.getElementById("note-markdown-source");
+    if (!btn || !source || btn.dataset.bound) return;
+    btn.dataset.bound = "true";
+    btn.addEventListener("click", async () => {
+      const text = source.textContent ?? "";
+      try {
+        await navigator.clipboard.writeText(text.trim());
+        btn.textContent = "Copied!";
+        spawnCoins(btn);
+        setTimeout(() => (btn.textContent = "Copy as Markdown"), 1500);
+      } catch {
+        btn.textContent = "Failed";
+      }
+    });
+  }
+
   addCopyButtons();
   initProgressBar();
+  initCopyMarkdown();
   document.addEventListener("astro:page-load", () => {
     addCopyButtons();
     initProgressBar();
+    initCopyMarkdown();
   });
 </script>
 
 <style is:global>
   article pre {
     position: relative;
+  }
+  .copy-md {
+    font-family: "Roboto", sans-serif;
+    font-size: 0.85rem;
+    color: rgb(var(--gray));
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.15em 0.55em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .copy-md:hover {
+    border-color: var(--accent);
+    color: var(--accent);
   }
   article pre .copy-code {
     position: absolute;

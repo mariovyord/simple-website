@@ -1,0 +1,357 @@
+---
+import { getCollection } from "astro:content";
+
+type Command = {
+  label: string;
+  href?: string;
+  action?: "toggle-theme";
+  hint?: string;
+  keywords?: string;
+};
+
+const posts = (await getCollection("notes")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+
+const counts = new Map<string, number>();
+for (const post of posts) {
+  for (const tag of post.data.tags ?? []) {
+    counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+}
+
+const commands: Command[] = [
+  { label: "Home", href: "/", hint: "page" },
+  { label: "Notes", href: "/notes/", hint: "page" },
+  { label: "Playground", href: "/playground", hint: "page" },
+  { label: "Colophon", href: "/colophon", hint: "page" },
+  { label: "Sitemap", href: "/sitemap", hint: "page" },
+  { label: "Toggle theme", action: "toggle-theme", hint: "action" },
+  ...posts.map((post) => ({
+    label: post.data.title,
+    href: `/notes/${post.slug}/`,
+    hint: "note",
+    keywords: (post.data.tags ?? []).join(" "),
+  })),
+  ...[...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag, count]) => ({
+      label: `#${tag}`,
+      href: `/tags/${tag}/`,
+      hint: `${count} note${count === 1 ? "" : "s"}`,
+      keywords: "tag",
+    })),
+];
+---
+
+<div class="cmdk" id="cmdk" hidden aria-hidden="true">
+  <div class="cmdk-backdrop" data-cmdk-close></div>
+  <div
+    class="cmdk-panel"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Command palette"
+  >
+    <div class="cmdk-input-row">
+      <span class="cmdk-prompt" aria-hidden="true">~ $</span>
+      <input
+        type="text"
+        id="cmdk-input"
+        class="cmdk-input"
+        placeholder="Jump to a note, tag, or page…"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="Search commands"
+      />
+      <kbd class="cmdk-esc">esc</kbd>
+    </div>
+    <ul class="cmdk-list" id="cmdk-list" role="listbox" aria-label="Results"></ul>
+    <div class="cmdk-empty" id="cmdk-empty" hidden>No matches</div>
+  </div>
+</div>
+
+<script type="application/json" id="cmdk-data" set:html={JSON.stringify(commands)}
+></script>
+
+<style is:global>
+  .cmdk {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+  }
+  .cmdk[hidden] {
+    display: none;
+  }
+  .cmdk-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    animation: cmdk-fade 0.15s ease;
+  }
+  .cmdk-panel {
+    position: relative;
+    width: 560px;
+    max-width: calc(100% - 2em);
+    max-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: cmdk-pop 0.15s ease;
+  }
+  .cmdk-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.9em 1em;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .cmdk-prompt {
+    font-family: "Roboto Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    color: rgb(var(--gray));
+    user-select: none;
+  }
+  .cmdk-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: "Roboto Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 1rem;
+  }
+  .cmdk-esc {
+    font-family: "Roboto", sans-serif;
+    font-size: 0.7rem;
+    color: rgb(var(--gray));
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+  }
+  .cmdk-list {
+    list-style: none;
+    margin: 0;
+    padding: 0.4em;
+    overflow-y: auto;
+  }
+  .cmdk-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1em;
+    padding: 0.6em 0.75em;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-family: "Roboto", sans-serif;
+    font-size: 0.95rem;
+  }
+  .cmdk-item[aria-selected="true"] {
+    background: var(--bg-secondary);
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  .cmdk-item[aria-selected="true"] .cmdk-hint {
+    color: var(--accent);
+  }
+  .cmdk-item .cmdk-hint {
+    color: rgb(var(--gray));
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .cmdk-item[aria-selected="true"] .cmdk-label {
+    color: var(--accent);
+  }
+  .cmdk-empty {
+    padding: 1em;
+    text-align: center;
+    color: rgb(var(--gray));
+    font-family: "Roboto", sans-serif;
+    font-size: 0.9rem;
+  }
+  @keyframes cmdk-fade {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes cmdk-pop {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.98);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cmdk-backdrop,
+    .cmdk-panel {
+      animation: none;
+    }
+  }
+</style>
+
+<script>
+  type Command = {
+    label: string;
+    href?: string;
+    action?: "toggle-theme";
+    hint?: string;
+    keywords?: string;
+  };
+
+  function initCommandPalette() {
+    const root = document.getElementById("cmdk");
+    if (!root || root.dataset.bound) return;
+    root.dataset.bound = "true";
+
+    const dataEl = document.getElementById("cmdk-data");
+    const input = document.getElementById("cmdk-input") as HTMLInputElement | null;
+    const list = document.getElementById("cmdk-list");
+    const empty = document.getElementById("cmdk-empty");
+    if (!dataEl || !input || !list || !empty) return;
+
+    let commands: Command[] = [];
+    try {
+      commands = JSON.parse(dataEl.textContent || "[]");
+    } catch {
+      commands = [];
+    }
+
+    let results: Command[] = [];
+    let selected = 0;
+    let lastMouse = { x: -1, y: -1 };
+
+    function score(cmd: Command, q: string): number {
+      const label = cmd.label.toLowerCase();
+      const kw = (cmd.keywords || "").toLowerCase();
+      if (!q) return 1;
+      if (label.startsWith(q)) return 3;
+      if (label.includes(q)) return 2;
+      if (kw.includes(q)) return 1;
+      return 0;
+    }
+
+    function render() {
+      const q = input!.value.trim().toLowerCase();
+      results = commands
+        .map((c) => ({ c, s: score(c, q) }))
+        .filter((r) => r.s > 0)
+        .sort((a, b) => b.s - a.s)
+        .map((r) => r.c);
+      if (selected >= results.length) selected = 0;
+
+      list!.innerHTML = "";
+      results.forEach((cmd, i) => {
+        const li = document.createElement("li");
+        li.className = "cmdk-item";
+        li.setAttribute("role", "option");
+        li.setAttribute("aria-selected", String(i === selected));
+        li.dataset.index = String(i);
+        const label = document.createElement("span");
+        label.className = "cmdk-label";
+        label.textContent = cmd.label;
+        const hint = document.createElement("span");
+        hint.className = "cmdk-hint";
+        hint.textContent = cmd.hint || "";
+        li.append(label, hint);
+        li.addEventListener("click", () => run(cmd));
+        li.addEventListener("mousemove", (ev) => {
+          // Ignore phantom mousemove events fired when the list scrolls
+          // under a stationary cursor during keyboard navigation.
+          if (ev.clientX === lastMouse.x && ev.clientY === lastMouse.y) return;
+          lastMouse = { x: ev.clientX, y: ev.clientY };
+          if (selected === i) return;
+          selected = i;
+          syncSelected();
+        });
+        list!.appendChild(li);
+      });
+      empty!.hidden = results.length > 0;
+    }
+
+    function syncSelected() {
+      list!.querySelectorAll<HTMLElement>(".cmdk-item").forEach((el, i) => {
+        el.setAttribute("aria-selected", String(i === selected));
+        if (i === selected) el.scrollIntoView({ block: "nearest" });
+      });
+    }
+
+    function run(cmd: Command) {
+      close();
+      if (cmd.action === "toggle-theme") {
+        const cur = document.documentElement.getAttribute("data-theme");
+        const next = cur === "light" ? "dark" : "light";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("theme", next);
+      } else if (cmd.href) {
+        window.location.href = cmd.href;
+      }
+    }
+
+    function open() {
+      root!.hidden = false;
+      root!.setAttribute("aria-hidden", "false");
+      input!.value = "";
+      selected = 0;
+      render();
+      input!.focus();
+    }
+
+    function close() {
+      root!.hidden = true;
+      root!.setAttribute("aria-hidden", "true");
+    }
+
+    function isOpen() {
+      return !root!.hidden;
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        isOpen() ? close() : open();
+        return;
+      }
+      if (!isOpen()) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        close();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selected = Math.min(selected + 1, results.length - 1);
+        syncSelected();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selected = Math.max(selected - 1, 0);
+        syncSelected();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        if (results[selected]) run(results[selected]);
+      }
+    });
+
+    input.addEventListener("input", () => {
+      selected = 0;
+      render();
+    });
+
+    root.querySelectorAll("[data-cmdk-close]").forEach((el) =>
+      el.addEventListener("click", close)
+    );
+
+    document.querySelectorAll("[data-cmdk-open]").forEach((el) =>
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        open();
+      })
+    );
+  }
+
+  initCommandPalette();
+  document.addEventListener("astro:page-load", initCommandPalette);
+</script>

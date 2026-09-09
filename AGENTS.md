@@ -33,3 +33,5 @@ Checklist at `cool-effects-checklist.md`. Current progress:
 - [x] Reading progress bar
 - [x] Magnetic hover on social links
 - [x] Spotlight follower
+- [x] Command palette (⌘K) — `src/components/CommandPalette.astro`, wired via `Header.astro`
+- [x] Copy as Markdown on note pages — `src/layouts/BlogPost.astro` (uses `post.body`)
